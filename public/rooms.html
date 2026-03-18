@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phòng tập — Music Studio Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<script src="shared.js"></script>
+<style id="dynamicStyle"></style>
+</head>
+<body>
+<div id="sidebarContainer"></div>
+<div class="main-content">
+  <div class="loading-overlay" id="loadingOverlay"><div class="spinner-ring"></div></div>
+  <div class="page-header">
+    <div class="page-title">🏠 Quản lý Phòng tập</div>
+    <button class="btn-primary-custom" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Thêm phòng</button>
+  </div>
+  <div class="data-table">
+    <div class="table-header">
+      <div class="table-title">Danh sách phòng</div>
+      <input type="text" class="form-control" id="searchInput" placeholder="🔍 Tìm kiếm..." style="max-width:200px" oninput="filterTable()">
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>#</th><th>Tên phòng</th><th>Sức chứa</th><th>Giá/giờ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody id="roomsTable"><tr><td colspan="6" class="empty-state"><i class="bi bi-hourglass"></i>Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="roomModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Thêm phòng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <div class="mb-3"><label class="form-label">Tên phòng *</label><input type="text" class="form-control" id="fName" placeholder="Phòng A1"></div>
+        <div class="row g-3 mb-3">
+          <div class="col-6"><label class="form-label">Sức chứa</label><input type="number" class="form-control" id="fCapacity" placeholder="5"></div>
+          <div class="col-6"><label class="form-label">Giá/giờ (VNĐ) *</label><input type="number" class="form-control" id="fPrice" placeholder="100000"></div>
+        </div>
+        <div class="mb-3" id="statusField" style="display:none">
+          <label class="form-label">Trạng thái</label>
+          <select class="form-select" id="fStatus"><option value="available">Sẵn sàng</option><option value="maintenance">Bảo trì</option></select>
+        </div>
+        <div class="mb-3"><label class="form-label">Mô tả</label><textarea class="form-control" id="fDesc" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary-custom" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-primary-custom" onclick="saveRoom()"><i class="bi bi-check-lg"></i> Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+requireAuth();
+document.getElementById('dynamicStyle').textContent = SIDEBAR_CSS;
+document.getElementById('sidebarContainer').innerHTML = renderSidebar('rooms');
+let allData = [];
+const modal = new bootstrap.Modal(document.getElementById('roomModal'));
+const user = getUser();
+
+async function loadData() {
+  showLoading(true);
+  const { data } = await apiFetch('/rooms');
+  allData = Array.isArray(data) ? data : [];
+  renderTable(allData);
+  showLoading(false);
+}
+
+function renderTable(data) {
+  if (!data.length) { document.getElementById('roomsTable').innerHTML = `<tr><td colspan="6" class="empty-state"><i class="bi bi-door-open"></i>Chưa có phòng nào</td></tr>`; return; }
+  document.getElementById('roomsTable').innerHTML = data.map((r,i) => `
+    <tr>
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td><strong>${r.name}</strong><br><small style="color:var(--text-muted)">${r.description||''}</small></td>
+      <td>${r.capacity} người</td>
+      <td style="color:var(--primary)">${formatCurrency(r.hourly_rate)}</td>
+      <td>${badgeStatus(r.status)}</td>
+      <td><div class="d-flex gap-1">
+        ${['admin','staff'].includes(user.role) ? `
+          <button class="btn-sm-action" onclick='openEditModal(${JSON.stringify(r)})'><i class="bi bi-pencil"></i></button>
+          <button class="btn-sm-action danger" onclick="deleteItem(${r.id})"><i class="bi bi-trash"></i></button>` : '—'}
+      </div></td>
+    </tr>`).join('');
+}
+
+function filterTable() {
+  const s = document.getElementById('searchInput').value.toLowerCase();
+  renderTable(allData.filter(r => r.name.toLowerCase().includes(s)));
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Thêm phòng';
+  document.getElementById('editId').value = '';
+  ['fName','fCapacity','fPrice','fDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('statusField').style.display = 'none';
+  modal.show();
+}
+
+function openEditModal(item) {
+  document.getElementById('modalTitle').textContent = 'Sửa phòng';
+  document.getElementById('editId').value = item.id;
+  document.getElementById('fName').value = item.name;
+  document.getElementById('fCapacity').value = item.capacity;
+  document.getElementById('fPrice').value = item.hourly_rate;
+  document.getElementById('fDesc').value = item.description || '';
+  document.getElementById('fStatus').value = item.status;
+  document.getElementById('statusField').style.display = 'block';
+  modal.show();
+}
+
+async function saveRoom() {
+  const id = document.getElementById('editId').value;
+  const body = { name: document.getElementById('fName').value.trim(), capacity: document.getElementById('fCapacity').value||1, hourly_rate: document.getElementById('fPrice').value, description: document.getElementById('fDesc').value.trim(), status: document.getElementById('fStatus').value };
+  if (!body.name || !body.hourly_rate) return showToast('Vui lòng điền tên và giá!', 'error');
+  const { ok, data } = id ? await apiFetch(`/rooms/${id}`, { method:'PUT', body:JSON.stringify(body) }) : await apiFetch('/rooms', { method:'POST', body:JSON.stringify(body) });
+  if (ok) { showToast(id ? 'Cập nhật thành công!' : 'Thêm phòng thành công!'); modal.hide(); loadData(); }
+  else showToast(data.message||'Lỗi!', 'error');
+}
+
+async function deleteItem(id) {
+  if (!confirm('Xóa phòng này?')) return;
+  const { ok } = await apiFetch(`/rooms/${id}`, { method:'DELETE' });
+  if (ok) { showToast('Xóa thành công!'); loadData(); }
+}
+
+loadData();
+</script>
+</body>
+</html>

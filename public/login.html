@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Studio Manager — Đăng nhập</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B2B;
+            --primary-dark: #e55a1f;
+            --bg: #0D0D0D;
+            --surface: #161616;
+            --surface2: #1E1E1E;
+            --border: #2A2A2A;
+            --text: #F0F0F0;
+            --text-muted: #888;
+            --accent: #FF6B2B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Panel */
+        .left-panel {
+            width: 55%;
+            background: var(--surface);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .left-panel::before {
+                content: '';
+                position: absolute;
+                width: 600px;
+                height: 600px;
+                background: radial-gradient(circle, rgba(255,107,43,0.15) 0%, transparent 70%);
+                top: -100px;
+                left: -100px;
+                border-radius: 50%;
+            }
+
+            .left-panel::after {
+                content: '';
+                position: absolute;
+                width: 400px;
+                height: 400px;
+                background: radial-gradient(circle, rgba(255,107,43,0.08) 0%, transparent 70%);
+                bottom: -50px;
+                right: -50px;
+                border-radius: 50%;
+            }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .brand-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+            .brand-logo span {
+                color: var(--primary);
+            }
+
+        .brand-tagline {
+            color: var(--text-muted);
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+        }
+
+        .features-list {
+            list-style: none;
+            text-align: left;
+            display: inline-block;
+        }
+
+            .features-list li {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.6rem 0;
+                color: var(--text-muted);
+                font-size: 0.9rem;
+            }
+
+                .features-list li i {
+                    color: var(--primary);
+                    font-size: 1rem;
+                }
+
+        /* Floating notes */
+        .note {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.05;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 45%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            background: var(--bg);
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+
+            .form-control:focus {
+                background: var(--surface2);
+                border-color: var(--primary);
+                color: var(--text);
+                box-shadow: 0 0 0 3px rgba(255,107,43,0.1);
+            }
+
+            .form-control::placeholder {
+                color: var(--text-muted);
+            }
+
+        .input-group-text {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-right: none;
+            color: var(--text-muted);
+        }
+
+        .btn-login {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.2s;
+            letter-spacing: 0.05em;
+        }
+
+            .btn-login:hover {
+                background: var(--primary-dark);
+                transform: translateY(-1px);
+                box-shadow: 0 8px 25px rgba(255,107,43,0.3);
+            }
+
+            .btn-login:active {
+                transform: translateY(0);
+            }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+            .divider::before, .divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+
+        .btn-register {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+            .btn-register:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+            }
+
+        .alert-custom {
+            background: rgba(255,107,43,0.1);
+            border: 1px solid rgba(255,107,43,0.3);
+            color: var(--primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .alert-success-custom {
+            background: rgba(40,167,69,0.1);
+            border: 1px solid rgba(40,167,69,0.3);
+            color: #28a745;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        /* Register form */
+        #registerForm {
+            display: none;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <div class="note" style="top:10%;left:10%;animation-delay:0s">🎵</div>
+        <div class="note" style="top:20%;right:15%;animation-delay:1s">🎸</div>
+        <div class="note" style="bottom:30%;left:20%;animation-delay:2s">🎹</div>
+        <div class="note" style="bottom:15%;right:10%;animation-delay:3s">🥁</div>
+        <div class="note" style="top:50%;left:5%;animation-delay:1.5s">🎺</div>
+
+        <div class="brand-content">
+            <div class="brand-logo">
+                Music<br><span>Studio</span>
+            </div>
+            <div class="brand-tagline">Manager System</div>
+
+            <ul class="features-list">
+                <li><i class="bi bi-check-circle-fill"></i> Quản lý nhạc cụ & phòng tập</li>
+                <li><i class="bi bi-check-circle-fill"></i> Đặt phòng & chống xung đột lịch</li>
+                <li><i class="bi bi-check-circle-fill"></i> Mượn/Trả nhạc cụ thông minh</li>
+                <li><i class="bi bi-check-circle-fill"></i> Thống kê & báo cáo doanh thu</li>
+                <li><i class="bi bi-check-circle-fill"></i> Phân quyền Admin / Staff / Customer</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+        <div class="login-card">
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="login-title">Đăng nhập</div>
+                <div class="login-subtitle">Chào mừng trở lại! Vui lòng đăng nhập.</div>
+
+                <div class="alert-custom" id="loginError"></div>
+                <div class="alert-success-custom" id="loginSuccess"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" class="form-control" id="loginUsername" placeholder="Nhập username...">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Mật khẩu</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Nhập mật khẩu...">
+                        <button class="btn input-group-text" onclick="togglePassword('loginPassword', this)" style="border:1px solid var(--border);border-left:none;cursor:pointer;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn-login" onclick="doLogin()" id="loginBtn">
+                    Đăng nhập
+                </button>
+
+                <div class="divider">hoặc</div>
+
+                <button class="btn-register" onclick="showRegister()">
+                    Tạo tài khoản mới
+                </button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm">
+                <div class="login-title">Đăng ký</div>
+                <div class="login-subtitle">Tạo tài khoản Customer mới.</div>
+
+                <div class="alert-custom" id="registerError"></div>
+                <div class="alert-success-custom" id="registerSuccess"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Họ và tên</label>
+                    <input type="text" class="form-control" id="regFullname" placeholder="Nguyễn Văn A">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" id="regUsername" placeholder="username123">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="regEmail" placeholder="email@example.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" id="regPhone" placeholder="0900000000">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" id="regPassword" placeholder="Tối thiểu 6 ký tự">
+                </div>
+
+                <button class="btn-login" onclick="doRegister()" id="registerBtn">
+                    Đăng ký
+                </button>
+
+                <div class="divider">hoặc</div>
+
+                <button class="btn-register" onclick="showLogin()">
+                    ← Quay lại đăng nhập
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>const API = 'http://localhost:5000/api';
+
+function togglePassword(id, btn) {
+  const input = document.getElementById(id);
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+
+function showRegister() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function showSuccess(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!username || !password) return showError('loginError', 'Vui lòng nhập đầy đủ thông tin!');
+
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng nhập...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      showSuccess('loginSuccess', '✅ Đăng nhập thành công! Đang chuyển hướng...');
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    } else {
+      showError('loginError', data.message || 'Đăng nhập thất bại!');
+    }
+  } catch (err) {
+    showError('loginError', 'Không kết nối được server!');
+  } finally {
+    btn.innerHTML = 'Đăng nhập';
+    btn.disabled = false;
+  }
+}
+
+async function doRegister() {
+  const full_name = document.getElementById('regFullname').value.trim();
+  const username  = document.getElementById('regUsername').value.trim();
+  const email     = document.getElementById('regEmail').value.trim();
+  const phone     = document.getElementById('regPhone').value.trim();
+  const password  = document.getElementById('regPassword').value;
+
+  if (!full_name || !username || !email || !password)
+    return showError('registerError', 'Vui lòng điền đầy đủ thông tin!');
+  if (password.length < 6)
+    return showError('registerError', 'Mật khẩu tối thiểu 6 ký tự!');
+
+  const btn = document.getElementById('registerBtn');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng ký...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name, username, email, phone, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      showSuccess('registerSuccess', '✅ Đăng ký thành công! Vui lòng đăng nhập.');
+      setTimeout(() => showLogin(), 2000);
+    } else {
+      showError('registerError', data.message || 'Đăng ký thất bại!');
+    }
+  } catch (err) {
+    showError('registerError', 'Không kết nối được server!');
+  } finally {
+    btn.innerHTML = 'Đăng ký';
+    btn.disabled = false;
+  }
+}
+
+// Enter key
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('registerForm').style.display === 'block') doRegister();
+    else doLogin();
+  }
+});
+
+// Check if already logged in
+if (localStorage.getItem('user')) 
+    window.location.href = 'dashboard.html';</script>
+</body>
+</html>

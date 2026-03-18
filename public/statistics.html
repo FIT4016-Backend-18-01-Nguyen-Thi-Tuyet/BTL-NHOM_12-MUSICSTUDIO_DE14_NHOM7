@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thống kê — Music Studio Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="shared.js"></script>
+<style id="dynamicStyle"></style>
+<style>
+  .chart-container { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; }
+  .chart-title { font-family:'Syne',sans-serif; font-weight:600; margin-bottom:1rem; }
+</style>
+</head>
+<body>
+<div id="sidebarContainer"></div>
+<div class="main-content">
+  <div class="loading-overlay" id="loadingOverlay"><div class="spinner-ring"></div></div>
+  <div class="page-header">
+    <div class="page-title">📊 Thống kê & Báo cáo</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="row g-3 mb-4" id="summaryStats">
+    <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-cash-stack"></i></div><div class="stat-value" id="totalRevenue">—</div><div class="stat-label">Tổng doanh thu</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-calendar-check"></i></div><div class="stat-value" id="totalBookings">—</div><div class="stat-label">Tổng đặt phòng</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-music-note"></i></div><div class="stat-value" id="totalBorrows">—</div><div class="stat-label">Tổng lượt mượn</div></div></div>
+    <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><div class="stat-value" id="totalCancelled">—</div><div class="stat-label">Đặt phòng hủy</div></div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-8">
+      <div class="chart-container">
+        <div class="chart-title">📈 Doanh thu theo tháng</div>
+        <canvas id="revenueChart" height="100"></canvas>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="chart-container">
+        <div class="chart-title">🍩 Phân bổ doanh thu</div>
+        <canvas id="pieChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="data-table">
+    <div class="table-header"><div class="table-title">Chi tiết theo tháng</div></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Tháng</th><th>Doanh thu phòng</th><th>Doanh thu nhạc cụ</th><th>Phí phạt</th><th>Tổng</th><th>Đặt phòng</th><th>Lượt mượn</th><th>Hủy</th></tr></thead>
+        <tbody id="statsTable"><tr><td colspan="8" class="empty-state"><i class="bi bi-hourglass"></i>Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+requireAuth();
+document.getElementById('dynamicStyle').textContent = SIDEBAR_CSS;
+document.getElementById('sidebarContainer').innerHTML = renderSidebar('statistics');
+
+Chart.defaults.color = '#888';
+Chart.defaults.borderColor = '#2A2A2A';
+
+let revenueChart, pieChart;
+
+async function loadStats() {
+  showLoading(true);
+  const { data } = await apiFetch('/reports/statistics');
+  const list = Array.isArray(data) ? data : [];
+
+  if (!list.length) {
+    document.getElementById('statsTable').innerHTML = `<tr><td colspan="8" class="empty-state"><i class="bi bi-bar-chart"></i>Chưa có dữ liệu thống kê</td></tr>`;
+    showLoading(false);
+    return;
+  }
+
+  // Summary
+  const totalRev   = list.reduce((s,r) => s + parseFloat(r.total_revenue||0), 0);
+  const totalBook  = list.reduce((s,r) => s + parseInt(r.total_bookings||0), 0);
+  const totalBor   = list.reduce((s,r) => s + parseInt(r.total_borrows||0), 0);
+  const totalCanc  = list.reduce((s,r) => s + parseInt(r.cancelled_bookings||0), 0);
+
+  document.getElementById('totalRevenue').textContent  = formatCurrency(totalRev);
+  document.getElementById('totalBookings').textContent = totalBook;
+  document.getElementById('totalBorrows').textContent  = totalBor;
+  document.getElementById('totalCancelled').textContent= totalCanc;
+
+  // Charts
+  const labels   = list.map(r => r.month).reverse();
+  const revBook  = list.map(r => parseFloat(r.total_booking_revenue||0)).reverse();
+  const revBor   = list.map(r => parseFloat(r.total_borrow_revenue||0)).reverse();
+  const revDmg   = list.map(r => parseFloat(r.total_damage_revenue||0)).reverse();
+
+  if (revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Đặt phòng', data: revBook, backgroundColor: 'rgba(255,107,43,0.7)', borderRadius: 4 },
+        { label: 'Mượn nhạc cụ', data: revBor, backgroundColor: 'rgba(13,110,253,0.7)', borderRadius: 4 },
+        { label: 'Phí phạt', data: revDmg, backgroundColor: 'rgba(220,53,69,0.7)', borderRadius: 4 },
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: false }, y: { stacked: false } } }
+  });
+
+  const totalBook2 = list.reduce((s,r) => s+parseFloat(r.total_booking_revenue||0),0);
+  const totalBor2  = list.reduce((s,r) => s+parseFloat(r.total_borrow_revenue||0),0);
+  const totalDmg2  = list.reduce((s,r) => s+parseFloat(r.total_damage_revenue||0),0);
+
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Đặt phòng', 'Mượn nhạc cụ', 'Phí phạt'],
+      datasets: [{ data: [totalBook2, totalBor2, totalDmg2], backgroundColor: ['rgba(255,107,43,0.8)','rgba(13,110,253,0.8)','rgba(220,53,69,0.8)'], borderWidth: 0 }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+  });
+
+  // Table
+  document.getElementById('statsTable').innerHTML = list.map(r => `
+    <tr>
+      <td><strong>${r.month}</strong></td>
+      <td style="color:var(--primary)">${formatCurrency(r.total_booking_revenue)}</td>
+      <td style="color:#0d6efd">${formatCurrency(r.total_borrow_revenue)}</td>
+      <td style="color:#dc3545">${formatCurrency(r.total_damage_revenue)}</td>
+      <td><strong>${formatCurrency(r.total_revenue)}</strong></td>
+      <td>${r.total_bookings}</td>
+      <td>${r.total_borrows}</td>
+      <td style="color:#dc3545">${r.cancelled_bookings}</td>
+    </tr>`).join('');
+
+  showLoading(false);
+}
+
+loadStats();
+</script>
+</body>
+</html>
